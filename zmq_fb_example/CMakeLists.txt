@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(GreenFunction)
+
+set(CMAKE_CXX_STANDARD 11)
+
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/
+    ${CMAKE_CURRENT_SOURCE_DIR}/interfaces
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flatbuffers/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libzmq/include
+)
+
+link_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libzmq/lib
+)
+
+link_libraries(
+    zmq
+)
+
+add_executable(CoDriver src/codriver.cpp)
+add_executable(Green src/green.cpp)
