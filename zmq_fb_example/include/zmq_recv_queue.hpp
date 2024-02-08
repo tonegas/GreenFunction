@@ -248,6 +248,7 @@ private:
       if (-1 == rc)
       {
         std::cerr << "Error receiving message part" << std::endl;
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
         return;
       }
 
