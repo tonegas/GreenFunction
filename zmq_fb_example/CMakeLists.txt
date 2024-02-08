@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/interfaces
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flatbuffers/include
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libzmq/include
@@ -19,5 +20,5 @@ link_libraries(
     zmq
 )
 
-add_executable(CoDriver src/codriver.cpp)
-add_executable(Green src/green.cpp)
+add_executable(codriver src/codriver.cpp)
+add_executable(green src/green.cpp)
