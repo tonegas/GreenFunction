@@ -18,6 +18,8 @@ discuss it with us!
 #pragma once
 
 #include "zmq.h"
+#include "zmq_message.hpp"
+#include <chrono>
 #include <iostream>
 #include <mutex>
 #include <queue>
@@ -41,16 +43,12 @@ discuss it with us!
  */
 class ZMQRecvQueue
 {
-public:
-  // Short-hand for a vector of ZMQ message parts
-  typedef std::vector<zmq_msg_t *> message_parts_t;
-
 private:
   // ZMQ socket
   void *socket;
 
   // Message queue
-  std::queue<message_parts_t> msg_queue;
+  std::queue<std::shared_ptr<ZMQMessage>> msg_queue;
   size_t queue_size;
 
   // Receive thread
@@ -66,6 +64,12 @@ private:
   bool stop_thread = false;
 
 public:
+  /**
+   * @brief Construct a new ZMQRecvQueue object
+   *
+   */
+  ZMQRecvQueue() = default;
+
   /**
    * @brief Construct a new ZMQRecvQueue object
    *
@@ -90,7 +94,7 @@ public:
   /**
    * @brief Destroy the ZMQRecvQueue object
    *
-   * This will stop the receive thread and free all the messages in the queue.
+   * This will stop the receive thread if it is running.
    */
   ~ZMQRecvQueue()
   {
@@ -98,16 +102,6 @@ public:
     if (!this->stop_thread)
     {
       this->stop();
-    }
-
-    // Free the queue
-    while (!this->msg_queue.empty())
-    {
-      for (auto &part : this->msg_queue.front())
-      {
-        this->free_part(part);
-      }
-      this->msg_queue.pop();
     }
   }
 
@@ -147,53 +141,24 @@ public:
    * @brief Receive a message from the queue
    *
    * This will receive the oldest message from the queue and store it in the
-   * provided message_parts_t. Once you obtain the message, **YOU** are
-   * responsible for freeing its parts using `zmq_msg_close` and `delete`.
+   * provided ZMQMessage.
    *
-   * @param msg The message_parts_t to store the message in
-   * @return true If a message was received
-   * @return false If the queue is empty or the user asked for more parts than
-   * there are
+   * @param msg The ZMQMessage to store the message in
+   * @return true if a message was received, false otherwise
    */
-  bool msg_recv(message_parts_t &msg)
+  bool msg_recv(std::shared_ptr<ZMQMessage> &msg)
   {
     // Lock
     std::lock_guard<std::mutex> lock(this->mtx_queue);
 
     // Check if the queue is empty
-    if (msg_queue.empty())
+    if (this->msg_queue.empty())
     {
       return false;
     }
 
-    // Get the oldest message
-    message_parts_t &oldest_message = msg_queue.front();
-    if (oldest_message.empty())
-    {
-      return false;
-    }
-
-    // Make sure the user is not asking for more parts than there are
-    if (msg.size() > oldest_message.size())
-    {
-      return false;
-    }
-
-    // Give the user only as many parts as they want
-    for (size_t i = 0; i < msg.size(); ++i)
-    {
-      // Move the part
-      zmq_msg_move(msg[i], oldest_message[i]);
-
-      // Close the part
-      this->free_part(oldest_message[i]);
-    }
-
-    // Free the remaining parts
-    for (size_t i = msg.size(); i < oldest_message.size(); ++i)
-    {
-      this->free_part(oldest_message[i]);
-    }
+    // Give the oldest message to the user
+    msg = this->msg_queue.front();
 
     // Pop the oldest message
     msg_queue.pop();
@@ -229,8 +194,8 @@ private:
     // Create empty ZMQ message
     zmq_msg_t part;
 
-    // Create an empty vector of parts
-    message_parts_t parts;
+    // Create an empty ZMQMessage
+    std::shared_ptr<ZMQMessage> msg = std::make_shared<ZMQMessage>();
 
     // Prepare the more flag and classic ZMQ return variable
     int more         = 0;
@@ -252,10 +217,8 @@ private:
         return;
       }
 
-      // Move the part
-      parts.push_back(new zmq_msg_t);
-      zmq_msg_init(parts.back());
-      zmq_msg_move(parts.back(), &part);
+      // Add the part to the message
+      msg->add_part(&part);
 
       // Close the message
       zmq_msg_close(&part);
@@ -271,12 +234,12 @@ private:
     }
 
     // Cycle the queue
-    this->cycle_queue(parts);
+    this->cycle_queue(msg);
   }
 
   // Cycle the queue pushing the new message at the end and freeing the oldest
   // message at the beginning if the queue is full
-  void cycle_queue(const message_parts_t &msg)
+  void cycle_queue(const std::shared_ptr<ZMQMessage> &msg)
   {
     // Lock
     std::lock_guard<std::mutex> lock(this->mtx_queue);
@@ -284,22 +247,10 @@ private:
     // Check if the queue is full
     if (this->msg_queue.size() >= this->queue_size)
     {
-      // Free the oldest message
-      for (auto &part : this->msg_queue.front())
-      {
-        this->free_part(part);
-      }
       this->msg_queue.pop();
     }
 
     // Push the new message
     this->msg_queue.push(msg);
-  }
-
-  // Free a ZMQ message part and delete it
-  void free_part(zmq_msg_t *part)
-  {
-    zmq_msg_close(part);
-    delete part;
   }
 };

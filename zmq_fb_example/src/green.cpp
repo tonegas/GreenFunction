@@ -45,8 +45,8 @@ int main()
   // Start the queue
   subscriber_queue.start();
 
-  // Create an empty message
-  ZMQRecvQueue::message_parts_t msg{new zmq_msg_t, new zmq_msg_t};
+  // Create an empty ZMQMessage
+  std::shared_ptr<ZMQMessage> msg = std::make_shared<ZMQMessage>();
 
   // Generate empty data containers
   std::string topic                 = "";
@@ -61,27 +61,22 @@ int main()
     // Start time
     auto start = std::chrono::high_resolution_clock::now();
 
-    // Initialize the message
-    for (auto &part : msg)
-    {
-      zmq_msg_init(part);
-    }
-
     // Receive data
     ok = subscriber_queue.msg_recv(msg);
     if (!ok)
     {
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
       continue;
     }
 
     // Print topic
     topic = std::string(
-        static_cast<char *>(zmq_msg_data(msg[0])), zmq_msg_size(msg[0])
+        static_cast<char *>(zmq_msg_data(msg->at(0))), zmq_msg_size(msg->at(0))
     );
     std::cout << "Topic: " << topic << std::endl;
 
     // Fill in the flatbuffer
-    auto codriver = flatbuffers::GetRoot<ICoDriver>(zmq_msg_data(msg[1]));
+    auto codriver = flatbuffers::GetRoot<ICoDriver>(zmq_msg_data(msg->at(1)));
 
     // Get data
     id                  = codriver->id();
@@ -98,19 +93,11 @@ int main()
     }
     std::cout << std::endl;
 
-    // Free zmq message
-    for (auto &part : msg)
-    {
-      zmq_msg_close(part);
-    }
-
     // End time
     auto end = std::chrono::high_resolution_clock::now();
 
     // Wait for 1 s
-    std::this_thread::sleep_for(
-        std::chrono::milliseconds(1000) - (end - start)
-    );
+    std::this_thread::sleep_for(std::chrono::seconds(1) - (end - start));
   }
 
   return 0;
