@@ -46,7 +46,7 @@ int main()
   subscriber_queue.start();
 
   // Create an empty ZMQMessage
-  std::shared_ptr<ZMQMessage> msg = std::make_shared<ZMQMessage>();
+  std::shared_ptr<ZMQMessage> msg;
 
   // Generate empty data containers
   std::string topic                 = "";
