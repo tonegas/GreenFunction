@@ -1,0 +1,29 @@
+/*
+
+Example FlatBuffers schema for the Green CoDriver project.
+
+*/
+
+namespace Example;
+
+// I am a normal comment
+struct CoDriverStruct {
+  double_array:[double:3];
+}
+
+/// I am a comment that will be included in the generated code
+struct GreenStruct {
+  double_array:[double:3];
+}
+
+table ICoDriver {
+  id:ulong = 0;
+  data:CoDriverStruct;
+}
+
+table IGreen {
+  id:ulong = 0;
+  data:GreenStruct;
+}
+
+root_type IGreen;

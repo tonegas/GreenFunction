@@ -19,6 +19,7 @@ link_directories(
 link_libraries(
     zmq
 )
-
-add_executable(codriver src/codriver.cpp)
+#add_executable(codriver src/codriver.cpp)
+add_executable(codriver src/codriver_offline_execute.cc)
 add_executable(green src/green.cpp)
+
