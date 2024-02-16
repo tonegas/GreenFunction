@@ -20,6 +20,8 @@ how to solve the slow subscriber problem.
 
 using namespace GreenFunction;
 
+int running = 1;
+
 int main()
 {
   // Create a ZMQ context
@@ -53,10 +55,13 @@ int main()
   uint64_t id                       = 0;
   std::vector<double> codriver_data = {};
 
+  // Handle SIGINT
+  signal(SIGINT, [](int) { running = 0; });
+
   // Receive data
   bool ok = false;
   std::cout << "Receiving data..." << std::endl;
-  while (true)
+  while (running)
   {
     // Start time
     auto start = std::chrono::high_resolution_clock::now();
@@ -99,6 +104,15 @@ int main()
     // Wait for 1 s
     std::this_thread::sleep_for(std::chrono::seconds(1) - (end - start));
   }
+
+  // Stop the queue
+  subscriber_queue.stop();
+
+  // Close the socket
+  zmq_close(subscriber);
+
+  // Destroy the context
+  zmq_ctx_destroy(context);
 
   return 0;
 }

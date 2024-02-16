@@ -84,7 +84,7 @@ public:
    */
   ZMQRecvQueue(void *socket, const size_t queue_size = 1)
   {
-    // Create ZMQ subscriber
+    // Set the socket
     this->socket = socket;
 
     // Set queue size
@@ -209,11 +209,10 @@ private:
       zmq_msg_init(&part);
 
       // Block until a message is available to be received from socket
-      rc = zmq_msg_recv(&part, this->socket, 0);
+      rc = zmq_msg_recv(&part, this->socket, ZMQ_DONTWAIT);
       if (-1 == rc)
       {
-        std::cerr << "Error receiving message part" << std::endl;
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
         return;
       }
 

@@ -17,6 +17,8 @@ solve the slow subscriber problem.
 
 using namespace GreenFunction;
 
+int running = 1;
+
 int main()
 {
   // Create ZMQ context
@@ -43,10 +45,19 @@ int main()
   uint64_t id                       = 0;
   std::vector<double> codriver_data = {1.0, 2.0, 3.0};
 
+  // Handle SIGINT
+  signal(SIGINT, [](int) { running = 0; });
+
   // Send data
   std::cout << "Sending data..." << std::endl;
   for (int i = 0; i < 1e5; i++)
   {
+    // Check if the thread should stop
+    if (!running)
+    {
+      break;
+    }
+
     // Start time
     auto start = std::chrono::high_resolution_clock::now();
 
