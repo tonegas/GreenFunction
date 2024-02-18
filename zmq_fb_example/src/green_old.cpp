@@ -40,6 +40,13 @@ int main() {
    // Wait for 1 s to avoid the slow joiner problem
    std::this_thread::sleep_for(std::chrono::seconds(1));
 
+   // Create the queue
+   ZMQRecvQueue subscriber_queue(subscriber, 1);
+   // Start the queue
+   subscriber_queue.start();
+   // Create an empty ZMQMessage
+   std::shared_ptr<ZMQMessage> msg;
+
    // Handle SIGINT
    signal(SIGINT, [](int) { running = 0; });
 
@@ -74,35 +81,22 @@ int main() {
       // Start time
       auto start = std::chrono::high_resolution_clock::now();
 
-      // Read message topic
-      int more = 0;
-      size_t more_size = sizeof (more);
-      zmq_msg_t received_topic;
-      int rc = zmq_msg_init (&received_topic);
-      assert (rc == 0);
-      rc = zmq_msg_recv (&received_topic, subscriber, 0);
-      assert (rc != -1);
-      rc = zmq_getsockopt (subscriber, ZMQ_RCVMORE, &more, &more_size);
-      assert (rc == 0); assert(more == 1);
-
-      // Read message data
-      zmq_msg_t received_data;
-      rc = zmq_msg_init (&received_data);
-      assert (rc == 0);
-      rc = zmq_msg_recv (&received_data, subscriber, 0);
-      assert (rc != -1);
-      rc = zmq_getsockopt (subscriber, ZMQ_RCVMORE, &more, &more_size);
-      assert (rc == 0); assert(more == 0);
+      // Receive data
+      ok = subscriber_queue.msg_recv(msg);
+      if (!ok) {
+         std::this_thread::sleep_for(std::chrono::microseconds(100));
+         continue;
+      }
 
       // Print topic_receiver
       topic_receiver = std::string(
-            static_cast<char *>(zmq_msg_data(&received_topic)), zmq_msg_size(&received_topic)
+            static_cast<char *>(zmq_msg_data(msg->at(0))), zmq_msg_size(msg->at(0))
             );
       std::cout << "Topic: " << topic_receiver << std::endl;
 
       if(topic_receiver.compare("GreenStructIn") == 0){
          // Fill in the flatbuffer
-         auto data = flatbuffers::GetRoot<IGreen>(zmq_msg_data(&received_data));
+         auto data = flatbuffers::GetRoot<IGreen>(zmq_msg_data(msg->at(1)));
 
          // Get data
          cycle_number = data->cycle_number();
@@ -120,10 +114,9 @@ int main() {
          adasis_speed_limit_values = std::vector<double>(adasis_speed_limit_values_aux->begin(),adasis_speed_limit_values_aux->end());
 
          std::cout << "received <- cycle_number: " << cycle_number << std::endl;
-
          /* WRITE YOUR CODE HERE */
-         std::this_thread::sleep_for(std::chrono::seconds(3));
 
+         /* INVIO DATI */
          // Initialize a FlatBuffer builder
          flatbuffers::FlatBufferBuilder builder;
          // build your message
@@ -131,6 +124,7 @@ int main() {
          flatbuffers::span<const double, 20> velocity_profile_times(adasis_speed_limit_dist.data(),20);
          flatbuffers::span<const double, 20> velocity_profile_values(adasis_speed_limit_values.data(),20);
          double cost_manoeuvre = adasis_speed_limits_nrs;
+
 
          auto green_struct_out = GreenStructOut(
                ecu_up_time,
@@ -147,16 +141,19 @@ int main() {
          int err2 = zmq_send(subscriber, builder.GetBufferPointer(), builder.GetSize(), 0);
          if(err1==-1 or err2==-1){
             std::cout << "Error!!!" << std::strerror(errno) << std::endl;
+         }else{
+            std::cout << "Invio!"<< std::endl;
          }
          std::cout << "sent -> cycle_number:" << data->cycle_number() << std::endl;
-         zmq_msg_close(&received_topic);
-         zmq_msg_close (&received_data);
       }
 
       // End time
       auto end = std::chrono::high_resolution_clock::now();
-      std::cout << "Total time:" << (end - start).count()/1000000000.0 << std::endl;
+      // Wait for 1 s
+      //std::this_thread::sleep_for(std::chrono::seconds(1) - (end - start));
    }
+   // Stop the queue
+   subscriber_queue.stop();
 
    // Close the socket
    zmq_close(subscriber);
