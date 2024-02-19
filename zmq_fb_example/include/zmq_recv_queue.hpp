@@ -235,9 +235,8 @@ private:
       // Initialise the msg
       zmq_msg_init(&part);
 
-      // Block until a message is available to be received from socket or the
-      // timeout is reached
-      rc = zmq_msg_recv(&part, this->socket, 0);
+      // No Block until a message is available to be received from socket
+      rc = zmq_msg_recv(&part, this->socket, ZMQ_DONTWAIT);
       if (-1 == rc)
       {
         return;
