@@ -30,6 +30,10 @@ int main()
   // Create the subscriber socket
   void *subscriber = zmq_socket(context, ZMQ_SUB);
 
+  // Set a RCVTIMEO to avoid blocking forever
+  int timeout = 1000;
+  zmq_setsockopt(subscriber, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
+
   // Connect to the endpoint
   int rc = zmq_connect(subscriber, "tcp://127.0.0.1:5555");
   assert(rc == 0);
@@ -42,10 +46,10 @@ int main()
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   // Create the queue
-  ZMQRecvQueue subscriber_queue(subscriber, 1);
+  ZMQRecvQueue subscriber_queue(10);
 
   // Start the queue
-  subscriber_queue.start();
+  subscriber_queue.start(&subscriber);
 
   // Create an empty ZMQMessage
   std::shared_ptr<ZMQMessage> msg;
@@ -106,7 +110,7 @@ int main()
   }
 
   // Stop the queue
-  subscriber_queue.stop();
+  subscriber_queue.stop(&subscriber);
 
   // Close the socket
   zmq_close(subscriber);

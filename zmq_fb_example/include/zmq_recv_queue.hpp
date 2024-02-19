@@ -19,7 +19,7 @@ discuss it with us!
 
 #include "zmq.h"
 #include "zmq_message.hpp"
-#include <chrono>
+#include <atomic>
 #include <iostream>
 #include <mutex>
 #include <queue>
@@ -57,11 +57,8 @@ private:
   // Mutex for queue access
   std::mutex mtx_queue;
 
-  // Mutex for thread management
-  std::mutex mtx_manage_thread;
-
   // Running flag
-  bool stop_thread = false;
+  std::atomic_bool thread_running{false};
 
 public:
   /**
@@ -73,20 +70,10 @@ public:
   /**
    * @brief Construct a new ZMQRecvQueue object
    *
-   * **YOU** are responsible for creating and binding the ZMQ socket. This class
-   * will only store the incoming messages in a queue. Note that once you pass
-   * the socket to this class, you should not use it in your main thread
-   * anymore, as this class will be using it in a separate thread. Remember that
-   * ZMQ sockets are **NOT** thread-safe.
-   *
-   * @param socket The ZMQ socket to receive messages from
    * @param queue_size The maximum size of the queue
    */
-  ZMQRecvQueue(void *socket, const size_t queue_size = 1)
+  ZMQRecvQueue(const size_t queue_size = 1)
   {
-    // Set the socket
-    this->socket = socket;
-
     // Set queue size
     this->queue_size = queue_size;
   }
@@ -94,14 +81,17 @@ public:
   /**
    * @brief Destroy the ZMQRecvQueue object
    *
-   * This will stop the receive thread if it is running.
+   * This will stop the receive thread if it is running, as well as free the
+   * ZMQ socket if it is still owned by the ZMQRecvQueue.
    */
   ~ZMQRecvQueue()
   {
     // Stop the thread only if it is running
-    if (!this->stop_thread)
+    if (this->thread_running)
     {
-      this->stop();
+      void *socket;
+      this->stop(&socket);
+      zmq_close(socket);
     }
   }
 
@@ -110,9 +100,51 @@ public:
    *
    * This will start the receive thread, which will receive messages from the
    * ZMQ socket and store them in the queue.
+   *
+   * **YOU** are responsible for creating the ZMQ socket and passing it to this
+   * method. This is done to allow the user to create any socket they want, with
+   * any configuration they want.
+   *
+   * Since ZMQ sockets are not thread-safe, we will take ownership of the
+   * socket and set your pointer to `nullptr`. Once you are done with the
+   * ZMQRecvQueue, you can call the `stop` method to stop the receive thread and
+   * receive the socket back. We will never close the socket, so **YOU** are
+   * responsible for doing so.
+   *
+   * @param socket The ZMQ socket to receive messages from
    */
-  void start()
+  void start(void **socket)
   {
+    // Take ownership of the socket
+    this->socket = *socket;
+    *socket      = nullptr;
+
+    // Check that the socket has a timeout set
+    int timeout;
+    size_t timeout_size = sizeof(timeout);
+    zmq_getsockopt(this->socket, ZMQ_RCVTIMEO, &timeout, &timeout_size);
+    if (timeout == -1)
+    {
+      throw std::runtime_error(
+          "ZMQRecvQueue: The socket has no timeout set, this will "
+          "cause the receive thread to block indefinitely. Please set "
+          "a timeout different from -1 to avoid this."
+      );
+    }
+
+    // Warn the user if the timeout is zero
+    if (timeout == 0)
+    {
+      std::cerr << "ZMQRecvQueue: The socket has a timeout of 0, this will "
+                   "cause the receive thread to consume 100%% of the CPU when "
+                   "no messages are available. "
+                   "Please set a timeout different from 0 to avoid this."
+                << std::endl;
+    }
+
+    // Set the running flag
+    this->thread_running = true;
+
     // Start the receive thread
     this->recv_thread = new std::thread(&ZMQRecvQueue::receive_loop, this);
   }
@@ -120,21 +152,27 @@ public:
   /**
    * @brief Stop the receive thread
    *
-   * This will stop the receive thread and wait for it to finish.
+   * This will stop the receive thread and wait for it to finish. It will then
+   * return the ZMQ socket to the user.
+   *
+   * @param socket The ZMQ socket to return to the user
    */
-  void stop()
+  void stop(void **socket)
   {
     // Tell the thread to stop
-    { // Critical section
-      std::lock_guard<std::mutex> lock(this->mtx_manage_thread);
-      this->stop_thread = true;
-    }
+    this->thread_running = false;
 
     // Wait for the thread to finish
     this->recv_thread->join();
 
     // Free the thread
     delete this->recv_thread;
+
+    // Return the socket to the user
+    *socket = this->socket;
+
+    // Set the socket to nullptr
+    this->socket = nullptr;
   }
 
   /**
@@ -170,19 +208,8 @@ private:
   // Infinite loop to receive messages
   void receive_loop()
   {
-    while (true)
+    while (this->thread_running)
     {
-      // Check if the thread should stop
-      { // Critical section
-        std::lock_guard<std::mutex> lock(this->mtx_manage_thread);
-
-        // Check if the thread should stop
-        if (this->stop_thread)
-        {
-          break;
-        }
-      }
-
       // Receive data
       this->receive();
     }
@@ -208,11 +235,11 @@ private:
       // Initialise the msg
       zmq_msg_init(&part);
 
-      // Block until a message is available to be received from socket
-      rc = zmq_msg_recv(&part, this->socket, ZMQ_DONTWAIT);
+      // Block until a message is available to be received from socket or the
+      // timeout is reached
+      rc = zmq_msg_recv(&part, this->socket, 0);
       if (-1 == rc)
       {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
         return;
       }
 
@@ -224,8 +251,6 @@ private:
 
       // Check if there are still parts to receive
       zmq_getsockopt(this->socket, ZMQ_RCVMORE, &more, &more_size);
-
-      // Check if there are still parts to receive
       if (!more)
       {
         break;
