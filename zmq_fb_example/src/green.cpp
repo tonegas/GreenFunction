@@ -32,7 +32,6 @@ int main()
   // Set LINGER to 0 to avoid blocking when closing the socket
   int linger = 0;
   zmq_setsockopt(subscriber, ZMQ_LINGER, &linger, sizeof(linger));
-  zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, "GreenStructIn", 13);
 
   // Connect to the endpoint
   int rc = zmq_connect(subscriber, "tcp://127.0.0.1:5555");
@@ -43,10 +42,6 @@ int main()
 
   // Handle SIGINT
   signal(SIGINT, [](int) { running = 0; });
-
-  // Generate empty input
-  std::string topic_receiver = "";
-  std::string topic_sender   = "GreenStructOut";
 
   // Received Date
   // Packet Identifier. Must be related to the packet GreenStructIn
