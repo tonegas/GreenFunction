@@ -15,195 +15,163 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 23 &&
 
 namespace GreenFunction {
 
-struct GreenStructIn;
+struct CoDriverStruct;
 
-struct GreenStructOut;
+struct GreenStruct;
+
+struct ICoDriver;
+struct ICoDriverBuilder;
+struct ICoDriverT;
 
 struct IGreen;
 struct IGreenBuilder;
+struct IGreenT;
 
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) GreenStructIn FLATBUFFERS_FINAL_CLASS {
+FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) CoDriverStruct FLATBUFFERS_FINAL_CLASS {
  private:
-  double ecu_up_time_;
-  int32_t adasis_curvature_nrs_;
-  int32_t padding0__;
-  double adasis_curvature_dist_[100];
-  double adasis_curvature_values_[100];
-  double lane_width_;
-  int32_t adasis_speed_limits_nrs_;
-  int32_t padding1__;
-  double adasis_speed_limit_dist_[10];
-  int32_t adasis_speed_limit_values_[10];
+  double double_array_[3];
 
  public:
-  GreenStructIn()
-      : ecu_up_time_(0),
-        adasis_curvature_nrs_(0),
-        padding0__(0),
-        adasis_curvature_dist_(),
-        adasis_curvature_values_(),
-        lane_width_(0),
-        adasis_speed_limits_nrs_(0),
-        padding1__(0),
-        adasis_speed_limit_dist_(),
-        adasis_speed_limit_values_() {
-    (void)padding0__;
-    (void)padding1__;
+  CoDriverStruct()
+      : double_array_() {
   }
-  GreenStructIn(double _ecu_up_time, int32_t _adasis_curvature_nrs, double _lane_width, int32_t _adasis_speed_limits_nrs)
-      : ecu_up_time_(::flatbuffers::EndianScalar(_ecu_up_time)),
-        adasis_curvature_nrs_(::flatbuffers::EndianScalar(_adasis_curvature_nrs)),
-        padding0__(0),
-        adasis_curvature_dist_(),
-        adasis_curvature_values_(),
-        lane_width_(::flatbuffers::EndianScalar(_lane_width)),
-        adasis_speed_limits_nrs_(::flatbuffers::EndianScalar(_adasis_speed_limits_nrs)),
-        padding1__(0),
-        adasis_speed_limit_dist_(),
-        adasis_speed_limit_values_() {
-    (void)padding0__;
-    (void)padding1__;
+  CoDriverStruct(::flatbuffers::span<const double, 3> _double_array) {
+    ::flatbuffers::CastToArray(double_array_).CopyFromSpan(_double_array);
   }
-  GreenStructIn(double _ecu_up_time, int32_t _adasis_curvature_nrs, ::flatbuffers::span<const double, 100> _adasis_curvature_dist, ::flatbuffers::span<const double, 100> _adasis_curvature_values, double _lane_width, int32_t _adasis_speed_limits_nrs, ::flatbuffers::span<const double, 10> _adasis_speed_limit_dist, ::flatbuffers::span<const int32_t, 10> _adasis_speed_limit_values)
-      : ecu_up_time_(::flatbuffers::EndianScalar(_ecu_up_time)),
-        adasis_curvature_nrs_(::flatbuffers::EndianScalar(_adasis_curvature_nrs)),
-        padding0__(0),
-        lane_width_(::flatbuffers::EndianScalar(_lane_width)),
-        adasis_speed_limits_nrs_(::flatbuffers::EndianScalar(_adasis_speed_limits_nrs)),
-        padding1__(0) {
-    (void)padding0__;
-    ::flatbuffers::CastToArray(adasis_curvature_dist_).CopyFromSpan(_adasis_curvature_dist);
-    ::flatbuffers::CastToArray(adasis_curvature_values_).CopyFromSpan(_adasis_curvature_values);
-    (void)padding1__;
-    ::flatbuffers::CastToArray(adasis_speed_limit_dist_).CopyFromSpan(_adasis_speed_limit_dist);
-    ::flatbuffers::CastToArray(adasis_speed_limit_values_).CopyFromSpan(_adasis_speed_limit_values);
-  }
-  /// Means system up-time second [s]
-  double ecu_up_time() const {
-    return ::flatbuffers::EndianScalar(ecu_up_time_);
-  }
-  /// Number of filled element inside CurvatureDist and CurvatureValues
-  int32_t adasis_curvature_nrs() const {
-    return ::flatbuffers::EndianScalar(adasis_curvature_nrs_);
-  }
-  /// Vector of distances for the curvatures in meters [m]
-  const ::flatbuffers::Array<double, 100> *adasis_curvature_dist() const {
-    return &::flatbuffers::CastToArray(adasis_curvature_dist_);
-  }
-  /// Vector of curvatures (positive for left curves) [1/m]
-  const ::flatbuffers::Array<double, 100> *adasis_curvature_values() const {
-    return &::flatbuffers::CastToArray(adasis_curvature_values_);
-  }
-  /// Width of the lane in meters [m]
-  double lane_width() const {
-    return ::flatbuffers::EndianScalar(lane_width_);
-  }
-  /// Number of filled element inside AdasisSpeedLimitDist and AdasisSpeedLimitValues
-  int32_t adasis_speed_limits_nrs() const {
-    return ::flatbuffers::EndianScalar(adasis_speed_limits_nrs_);
-  }
-  /// Vector of distance for the speed limits if is negative means that the vehicle in inside a speed limit [m]
-  const ::flatbuffers::Array<double, 10> *adasis_speed_limit_dist() const {
-    return &::flatbuffers::CastToArray(adasis_speed_limit_dist_);
-  }
-  /// Vector of speedlimit in km [km/h]
-  const ::flatbuffers::Array<int32_t, 10> *adasis_speed_limit_values() const {
-    return &::flatbuffers::CastToArray(adasis_speed_limit_values_);
+  const ::flatbuffers::Array<double, 3> *double_array() const {
+    return &::flatbuffers::CastToArray(double_array_);
   }
 };
-FLATBUFFERS_STRUCT_END(GreenStructIn, 1752);
+FLATBUFFERS_STRUCT_END(CoDriverStruct, 24);
 
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) GreenStructOut FLATBUFFERS_FINAL_CLASS {
+/// I am a comment that will be included in the generated code
+FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) GreenStruct FLATBUFFERS_FINAL_CLASS {
  private:
-  double ecu_up_time_;
-  double t0_;
-  double velocity_profile_times_[20];
-  double velocity_profile_values_[20];
-  double cost_manoeuvre_;
+  double double_array_[3];
 
  public:
-  GreenStructOut()
-      : ecu_up_time_(0),
-        t0_(0),
-        velocity_profile_times_(),
-        velocity_profile_values_(),
-        cost_manoeuvre_(0) {
+  GreenStruct()
+      : double_array_() {
   }
-  GreenStructOut(double _ecu_up_time, double _t0, double _cost_manoeuvre)
-      : ecu_up_time_(::flatbuffers::EndianScalar(_ecu_up_time)),
-        t0_(::flatbuffers::EndianScalar(_t0)),
-        velocity_profile_times_(),
-        velocity_profile_values_(),
-        cost_manoeuvre_(::flatbuffers::EndianScalar(_cost_manoeuvre)) {
+  GreenStruct(::flatbuffers::span<const double, 3> _double_array) {
+    ::flatbuffers::CastToArray(double_array_).CopyFromSpan(_double_array);
   }
-  GreenStructOut(double _ecu_up_time, double _t0, ::flatbuffers::span<const double, 20> _velocity_profile_times, ::flatbuffers::span<const double, 20> _velocity_profile_values, double _cost_manoeuvre)
-      : ecu_up_time_(::flatbuffers::EndianScalar(_ecu_up_time)),
-        t0_(::flatbuffers::EndianScalar(_t0)),
-        cost_manoeuvre_(::flatbuffers::EndianScalar(_cost_manoeuvre)) {
-    ::flatbuffers::CastToArray(velocity_profile_times_).CopyFromSpan(_velocity_profile_times);
-    ::flatbuffers::CastToArray(velocity_profile_values_).CopyFromSpan(_velocity_profile_values);
-  }
-  /// Means system up-time second [s]
-  double ecu_up_time() const {
-    return ::flatbuffers::EndianScalar(ecu_up_time_);
-  }
-  /// ECU up time when the primitive starts (based on ECUs given by Scenario Messages)
-  double t0() const {
-    return ::flatbuffers::EndianScalar(t0_);
-  }
-  /// Vector of times for the velocity profile
-  const ::flatbuffers::Array<double, 20> *velocity_profile_times() const {
-    return &::flatbuffers::CastToArray(velocity_profile_times_);
-  }
-  /// Vector of velocity profile
-  const ::flatbuffers::Array<double, 20> *velocity_profile_values() const {
-    return &::flatbuffers::CastToArray(velocity_profile_values_);
-  }
-  /// Cost of the manoeuvre
-  double cost_manoeuvre() const {
-    return ::flatbuffers::EndianScalar(cost_manoeuvre_);
+  const ::flatbuffers::Array<double, 3> *double_array() const {
+    return &::flatbuffers::CastToArray(double_array_);
   }
 };
-FLATBUFFERS_STRUCT_END(GreenStructOut, 344);
+FLATBUFFERS_STRUCT_END(GreenStruct, 24);
 
-struct IGreen FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
-  typedef IGreenBuilder Builder;
+struct ICoDriverT : public ::flatbuffers::NativeTable {
+  typedef ICoDriver TableType;
+  uint64_t id = 0;
+  std::unique_ptr<GreenFunction::CoDriverStruct> data{};
+  ICoDriverT() = default;
+  ICoDriverT(const ICoDriverT &o);
+  ICoDriverT(ICoDriverT&&) FLATBUFFERS_NOEXCEPT = default;
+  ICoDriverT &operator=(ICoDriverT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct ICoDriver FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ICoDriverT NativeTableType;
+  typedef ICoDriverBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_CYCLE_NUMBER = 4,
-    VT_IN = 6,
-    VT_OUT = 8
+    VT_ID = 4,
+    VT_DATA = 6
   };
-  /// Packet Identifier. Must be related to the packet GreenStructIn
-  uint64_t cycle_number() const {
-    return GetField<uint64_t>(VT_CYCLE_NUMBER, 0);
+  uint64_t id() const {
+    return GetField<uint64_t>(VT_ID, 0);
   }
-  const GreenFunction::GreenStructIn *in() const {
-    return GetStruct<const GreenFunction::GreenStructIn *>(VT_IN);
-  }
-  const GreenFunction::GreenStructOut *out() const {
-    return GetStruct<const GreenFunction::GreenStructOut *>(VT_OUT);
+  const GreenFunction::CoDriverStruct *data() const {
+    return GetStruct<const GreenFunction::CoDriverStruct *>(VT_DATA);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint64_t>(verifier, VT_CYCLE_NUMBER, 8) &&
-           VerifyField<GreenFunction::GreenStructIn>(verifier, VT_IN, 8) &&
-           VerifyField<GreenFunction::GreenStructOut>(verifier, VT_OUT, 8) &&
+           VerifyField<uint64_t>(verifier, VT_ID, 8) &&
+           VerifyField<GreenFunction::CoDriverStruct>(verifier, VT_DATA, 8) &&
            verifier.EndTable();
   }
+  ICoDriverT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(ICoDriverT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<ICoDriver> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ICoDriverT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct ICoDriverBuilder {
+  typedef ICoDriver Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(uint64_t id) {
+    fbb_.AddElement<uint64_t>(ICoDriver::VT_ID, id, 0);
+  }
+  void add_data(const GreenFunction::CoDriverStruct *data) {
+    fbb_.AddStruct(ICoDriver::VT_DATA, data);
+  }
+  explicit ICoDriverBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ICoDriver> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ICoDriver>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ICoDriver> CreateICoDriver(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t id = 0,
+    const GreenFunction::CoDriverStruct *data = nullptr) {
+  ICoDriverBuilder builder_(_fbb);
+  builder_.add_id(id);
+  builder_.add_data(data);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<ICoDriver> CreateICoDriver(::flatbuffers::FlatBufferBuilder &_fbb, const ICoDriverT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct IGreenT : public ::flatbuffers::NativeTable {
+  typedef IGreen TableType;
+  uint64_t id = 0;
+  std::unique_ptr<GreenFunction::GreenStruct> data{};
+  IGreenT() = default;
+  IGreenT(const IGreenT &o);
+  IGreenT(IGreenT&&) FLATBUFFERS_NOEXCEPT = default;
+  IGreenT &operator=(IGreenT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct IGreen FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef IGreenT NativeTableType;
+  typedef IGreenBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_DATA = 6
+  };
+  uint64_t id() const {
+    return GetField<uint64_t>(VT_ID, 0);
+  }
+  const GreenFunction::GreenStruct *data() const {
+    return GetStruct<const GreenFunction::GreenStruct *>(VT_DATA);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_ID, 8) &&
+           VerifyField<GreenFunction::GreenStruct>(verifier, VT_DATA, 8) &&
+           verifier.EndTable();
+  }
+  IGreenT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(IGreenT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<IGreen> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const IGreenT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct IGreenBuilder {
   typedef IGreen Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_cycle_number(uint64_t cycle_number) {
-    fbb_.AddElement<uint64_t>(IGreen::VT_CYCLE_NUMBER, cycle_number, 0);
+  void add_id(uint64_t id) {
+    fbb_.AddElement<uint64_t>(IGreen::VT_ID, id, 0);
   }
-  void add_in(const GreenFunction::GreenStructIn *in) {
-    fbb_.AddStruct(IGreen::VT_IN, in);
-  }
-  void add_out(const GreenFunction::GreenStructOut *out) {
-    fbb_.AddStruct(IGreen::VT_OUT, out);
+  void add_data(const GreenFunction::GreenStruct *data) {
+    fbb_.AddStruct(IGreen::VT_DATA, data);
   }
   explicit IGreenBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -218,14 +186,94 @@ struct IGreenBuilder {
 
 inline ::flatbuffers::Offset<IGreen> CreateIGreen(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    uint64_t cycle_number = 0,
-    const GreenFunction::GreenStructIn *in = nullptr,
-    const GreenFunction::GreenStructOut *out = nullptr) {
+    uint64_t id = 0,
+    const GreenFunction::GreenStruct *data = nullptr) {
   IGreenBuilder builder_(_fbb);
-  builder_.add_cycle_number(cycle_number);
-  builder_.add_out(out);
-  builder_.add_in(in);
+  builder_.add_id(id);
+  builder_.add_data(data);
   return builder_.Finish();
+}
+
+::flatbuffers::Offset<IGreen> CreateIGreen(::flatbuffers::FlatBufferBuilder &_fbb, const IGreenT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+inline ICoDriverT::ICoDriverT(const ICoDriverT &o)
+      : id(o.id),
+        data((o.data) ? new GreenFunction::CoDriverStruct(*o.data) : nullptr) {
+}
+
+inline ICoDriverT &ICoDriverT::operator=(ICoDriverT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(id, o.id);
+  std::swap(data, o.data);
+  return *this;
+}
+
+inline ICoDriverT *ICoDriver::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<ICoDriverT>(new ICoDriverT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void ICoDriver::UnPackTo(ICoDriverT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = id(); _o->id = _e; }
+  { auto _e = data(); if (_e) _o->data = std::unique_ptr<GreenFunction::CoDriverStruct>(new GreenFunction::CoDriverStruct(*_e)); }
+}
+
+inline ::flatbuffers::Offset<ICoDriver> ICoDriver::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ICoDriverT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateICoDriver(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<ICoDriver> CreateICoDriver(::flatbuffers::FlatBufferBuilder &_fbb, const ICoDriverT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ICoDriverT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _id = _o->id;
+  auto _data = _o->data ? _o->data.get() : nullptr;
+  return GreenFunction::CreateICoDriver(
+      _fbb,
+      _id,
+      _data);
+}
+
+inline IGreenT::IGreenT(const IGreenT &o)
+      : id(o.id),
+        data((o.data) ? new GreenFunction::GreenStruct(*o.data) : nullptr) {
+}
+
+inline IGreenT &IGreenT::operator=(IGreenT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(id, o.id);
+  std::swap(data, o.data);
+  return *this;
+}
+
+inline IGreenT *IGreen::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<IGreenT>(new IGreenT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void IGreen::UnPackTo(IGreenT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = id(); _o->id = _e; }
+  { auto _e = data(); if (_e) _o->data = std::unique_ptr<GreenFunction::GreenStruct>(new GreenFunction::GreenStruct(*_e)); }
+}
+
+inline ::flatbuffers::Offset<IGreen> IGreen::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const IGreenT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateIGreen(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<IGreen> CreateIGreen(::flatbuffers::FlatBufferBuilder &_fbb, const IGreenT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const IGreenT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _id = _o->id;
+  auto _data = _o->data ? _o->data.get() : nullptr;
+  return GreenFunction::CreateIGreen(
+      _fbb,
+      _id,
+      _data);
 }
 
 inline const GreenFunction::IGreen *GetIGreen(const void *buf) {
@@ -256,6 +304,18 @@ inline void FinishSizePrefixedIGreenBuffer(
     ::flatbuffers::FlatBufferBuilder &fbb,
     ::flatbuffers::Offset<GreenFunction::IGreen> root) {
   fbb.FinishSizePrefixed(root);
+}
+
+inline std::unique_ptr<GreenFunction::IGreenT> UnPackIGreen(
+    const void *buf,
+    const ::flatbuffers::resolver_function_t *res = nullptr) {
+  return std::unique_ptr<GreenFunction::IGreenT>(GetIGreen(buf)->UnPack(res));
+}
+
+inline std::unique_ptr<GreenFunction::IGreenT> UnPackSizePrefixedIGreen(
+    const void *buf,
+    const ::flatbuffers::resolver_function_t *res = nullptr) {
+  return std::unique_ptr<GreenFunction::IGreenT>(GetSizePrefixedIGreen(buf)->UnPack(res));
 }
 
 }  // namespace GreenFunction

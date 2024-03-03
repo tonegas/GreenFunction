@@ -30,14 +30,12 @@ struct GreenStructIn {
 struct GreenStructOut {
     /// Means system up-time second [s]
     ecu_up_time:double;
-    /// Delta from ECU up time when the primitive starts (based on ECUs given by Scenario Messages)
+    /// ECU up time when the primitive starts (based on ECUs given by Scenario Messages)
     t0:double;
     /// Vector of times for the velocity profile
-    greenassistant_time:[double:20];
-    /// Vector of spaces for the velocity profile
-    greenassistant_space:[double:20];
+    velocity_profile_times:[double:20];
     /// Vector of velocity profile
-    greenassistant_velocity:[double:20];
+    velocity_profile_values:[double:20];
     /// Cost of the manoeuvre
     cost_manoeuvre:double;
 }

@@ -100,7 +100,8 @@ int main(int argc, const char *argv[]) {
          // Initialize a FlatBuffer builder
          flatbuffers::FlatBufferBuilder builder;
 
-         auto green_struct = GreenStructIn(scenario_msg.data_struct.ECUupTime, scenario_msg.data_struct.AdasisCurvatureNrs[0],
+         auto green_struct = GreenStructIn(scenario_msg.data_struct.ECUupTime, scenario_msg.data_struct.VLgtFild,
+                                           scenario_msg.data_struct.AdasisCurvatureNrs[0],
                                            scenario_msg.data_struct.AdasisCurvatureDist, scenario_msg.data_struct.AdasisCurvatureValues,
                                            scenario_msg.data_struct.LaneWidth, scenario_msg.data_struct.AdasisSpeedLimitsNrs[0],
                                            scenario_msg.data_struct.AdasisSpeedLimitDist, scenario_msg.data_struct.AdasisSpeedLimitValues);

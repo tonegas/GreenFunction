@@ -6,45 +6,24 @@ Example FlatBuffers schema for the Green CoDriver project.
 
 namespace GreenFunction;
 
-struct GreenStructIn {
-    /// Means system up-time second [s]
-    ecu_up_time:double;
-    /// Number of filled element inside CurvatureDist and CurvatureValues
-    adasis_curvature_nrs:int;
-    /// Vector of distances for the curvatures in meters [m]
-    adasis_curvature_dist:[double:100];
-    /// Vector of curvatures (positive for left curves) [1/m]
-    adasis_curvature_values:[double:100];
-    /// Width of the lane in meters [m]
-    lane_width:double;
-    /// Number of filled element inside AdasisSpeedLimitDist and AdasisSpeedLimitValues
-    adasis_speed_limits_nrs:int;
-    /// Vector of distance for the speed limits if is negative means that the vehicle in inside a speed limit [m]
-    adasis_speed_limit_dist:[double:10];
-    /// Vector of speedlimit in km [km/h]
-    adasis_speed_limit_values:[int:10];
+// I am a normal comment
+struct CoDriverStruct {
+  double_array:[double:3];
 }
 
-struct GreenStructOut {
-    /// Means system up-time second [s]
-    ecu_up_time:double;
-    /// ECU up time when the primitive starts (based on ECUs given by Scenario Messages)
-    t0:double;
-    /// Vector of times for the velocity profile
-    velocity_profile_times:[double:20];
-    /// Vector of velocity profile
-    velocity_profile_values:[double:20];
-    /// Cost of the manoeuvre
-    cost_manoeuvre:double;
+/// I am a comment that will be included in the generated code
+struct GreenStruct {
+  double_array:[double:3];
+}
+
+table ICoDriver {
+  id:ulong = 0;
+  data:CoDriverStruct;
 }
 
 table IGreen {
-  /// Packet Identifier. Must be related to the packet GreenStructIn
-  cycle_number:ulong;
-  in:GreenStructIn;
-  out:GreenStructOut;
+  id:ulong = 0;
+  data:GreenStruct;
 }
 
 root_type IGreen;
-
-

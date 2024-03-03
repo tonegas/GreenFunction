@@ -47,6 +47,8 @@ int main() {
    uint64_t cycle_number;
    // Means system up-time second [s]
    double ecu_up_time;
+   // Ego velocity [m/s]
+   double ego_velocity;
    // Number of filled element inside CurvatureDist and CurvatureValues
    int32_t adasis_curvature_nrs;
    // Vector of distances for the curvatures in meters [m]
@@ -90,6 +92,7 @@ int main() {
       // Data
       cycle_number = data->cycle_number();
       ecu_up_time = data->in()->ecu_up_time();
+      ego_velocity = data->in()->ego_velocity();
       adasis_curvature_nrs = data->in()->adasis_curvature_nrs();
       adasis_curvature_dist = std::vector<double>(adasis_curvature_dist_aux->begin(), adasis_curvature_dist_aux->end());
       adasis_curvature_values = std::vector<double>(adasis_curvature_values_aux->begin(), adasis_curvature_values_aux->end());
@@ -103,7 +106,7 @@ int main() {
       /* WRITE YOUR CODE HERE */
       std::this_thread::sleep_for(std::chrono::seconds(3));
 
-      std::vector<double> velocity_profile_times_data();
+      //std::vector<double> velocity_profile_times_data();
       /* WRITE YOUR CODE HERE */
 
 
