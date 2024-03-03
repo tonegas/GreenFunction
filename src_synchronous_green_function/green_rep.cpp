@@ -103,22 +103,22 @@ int main() {
 
       std::cout << "received <- cycle_number: " << cycle_number << std::endl;
 
-      /* WRITE YOUR CODE HERE */
+      /* ---------------------- WRITE YOUR CODE HERE ---------------------- */
       std::this_thread::sleep_for(std::chrono::seconds(3));
 
-      //std::vector<double> velocity_profile_times_data();
-      /* WRITE YOUR CODE HERE */
+      // Data for the output
+      double t0 = 0;
+      double greenassistant_time[20];
+      double greenassistant_space[20];
+      double greenassistant_velocity[20];
+      double cost_manoeuvre = 0;
+      /* ---------------------- WRITE YOUR CODE HERE ---------------------- */
 
 
       // Initialize a FlatBuffer builder
       flatbuffers::FlatBufferBuilder builder;
       // build your message
-      double t0 = adasis_curvature_dist[0];
-      flatbuffers::span<const double, 20> velocity_profile_times(adasis_speed_limit_dist.data(), 20);
-      flatbuffers::span<const double, 20> velocity_profile_values(adasis_speed_limit_values.data(), 20);
-      double cost_manoeuvre = adasis_speed_limits_nrs;
-
-      auto green_struct_out = GreenStructOut(ecu_up_time, t0, velocity_profile_times, velocity_profile_values, cost_manoeuvre);
+      auto green_struct_out = GreenStructOut(ecu_up_time, t0, greenassistant_time, greenassistant_space, greenassistant_velocity, cost_manoeuvre);
       auto packet = CreateIGreen(builder, data->cycle_number(), NULL, &green_struct_out);
       builder.Finish(packet);
 

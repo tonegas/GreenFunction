@@ -56,9 +56,11 @@ int main(int argc, const char *argv[]) {
    // Messages)
    double t0;
    // Vector of times for the velocity profile
-   std::vector<double> velocity_profile_times;
+   std::vector<double> greenassistant_time;
+   // Vector of space profile
+   std::vector<double> greenassistant_space;
    // Vector of velocity profile
-   std::vector<double> velocity_profile_values;
+   std::vector<double> greenassistant_velocity;
    // Cost of the manoeuvre
    double cost_manoeuvre;
 
@@ -87,10 +89,12 @@ int main(int argc, const char *argv[]) {
                std::cout << "received <- cycle_number: " << cycle_number << std::endl;
                ecu_up_time = data->out()->ecu_up_time();
                t0 = data->out()->t0();
-               auto velocity_profile_times_aux = data->out()->velocity_profile_times();
-               auto velocity_profile_values_aux = data->out()->velocity_profile_values();
-               velocity_profile_times = std::vector<double>(velocity_profile_times_aux->begin(), velocity_profile_times_aux->end());
-               velocity_profile_values = std::vector<double>(velocity_profile_values_aux->begin(), velocity_profile_values_aux->end());
+               auto greenassistant_time_aux = data->out()->greenassistant_time();
+               auto greenassistant_velocity_aux = data->out()->greenassistant_velocity();
+               auto greenassistant_space_aux = data->out()->greenassistant_space();
+               greenassistant_time = std::vector<double>(greenassistant_time_aux->begin(), greenassistant_time_aux->end());
+               greenassistant_velocity = std::vector<double>(greenassistant_velocity_aux->begin(), greenassistant_velocity_aux->end());
+               greenassistant_space = std::vector<double>(greenassistant_space_aux->begin(), greenassistant_space_aux->end());
                cost_manoeuvre = data->out()->cost_manoeuvre();
                zmq_msg_close(&received_data);
                received = 1;

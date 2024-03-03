@@ -33,9 +33,11 @@ struct GreenStructOut {
     /// ECU up time when the primitive starts (based on ECUs given by Scenario Messages)
     t0:double;
     /// Vector of times for the velocity profile
-    velocity_profile_times:[double:20];
+    greenassistant_time:[double:20];
+    /// Vector of spaces for the velocity profile
+    greenassistant_space:[double:20];
     /// Vector of velocity profile
-    velocity_profile_values:[double:20];
+    greenassistant_velocity:[double:20];
     /// Cost of the manoeuvre
     cost_manoeuvre:double;
 }

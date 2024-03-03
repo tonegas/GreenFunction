@@ -126,31 +126,35 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) GreenStructOut FLATBUFFERS_FINAL_CLASS {
  private:
   double ecu_up_time_;
   double t0_;
-  double velocity_profile_times_[20];
-  double velocity_profile_values_[20];
+  double greenassistant_time_[20];
+  double greenassistant_space_[20];
+  double greenassistant_velocity_[20];
   double cost_manoeuvre_;
 
  public:
   GreenStructOut()
       : ecu_up_time_(0),
         t0_(0),
-        velocity_profile_times_(),
-        velocity_profile_values_(),
+        greenassistant_time_(),
+        greenassistant_space_(),
+        greenassistant_velocity_(),
         cost_manoeuvre_(0) {
   }
   GreenStructOut(double _ecu_up_time, double _t0, double _cost_manoeuvre)
       : ecu_up_time_(::flatbuffers::EndianScalar(_ecu_up_time)),
         t0_(::flatbuffers::EndianScalar(_t0)),
-        velocity_profile_times_(),
-        velocity_profile_values_(),
+        greenassistant_time_(),
+        greenassistant_space_(),
+        greenassistant_velocity_(),
         cost_manoeuvre_(::flatbuffers::EndianScalar(_cost_manoeuvre)) {
   }
-  GreenStructOut(double _ecu_up_time, double _t0, ::flatbuffers::span<const double, 20> _velocity_profile_times, ::flatbuffers::span<const double, 20> _velocity_profile_values, double _cost_manoeuvre)
+  GreenStructOut(double _ecu_up_time, double _t0, ::flatbuffers::span<const double, 20> _greenassistant_time, ::flatbuffers::span<const double, 20> _greenassistant_space, ::flatbuffers::span<const double, 20> _greenassistant_velocity, double _cost_manoeuvre)
       : ecu_up_time_(::flatbuffers::EndianScalar(_ecu_up_time)),
         t0_(::flatbuffers::EndianScalar(_t0)),
         cost_manoeuvre_(::flatbuffers::EndianScalar(_cost_manoeuvre)) {
-    ::flatbuffers::CastToArray(velocity_profile_times_).CopyFromSpan(_velocity_profile_times);
-    ::flatbuffers::CastToArray(velocity_profile_values_).CopyFromSpan(_velocity_profile_values);
+    ::flatbuffers::CastToArray(greenassistant_time_).CopyFromSpan(_greenassistant_time);
+    ::flatbuffers::CastToArray(greenassistant_space_).CopyFromSpan(_greenassistant_space);
+    ::flatbuffers::CastToArray(greenassistant_velocity_).CopyFromSpan(_greenassistant_velocity);
   }
   /// Means system up-time second [s]
   double ecu_up_time() const {
@@ -161,19 +165,23 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) GreenStructOut FLATBUFFERS_FINAL_CLASS {
     return ::flatbuffers::EndianScalar(t0_);
   }
   /// Vector of times for the velocity profile
-  const ::flatbuffers::Array<double, 20> *velocity_profile_times() const {
-    return &::flatbuffers::CastToArray(velocity_profile_times_);
+  const ::flatbuffers::Array<double, 20> *greenassistant_time() const {
+    return &::flatbuffers::CastToArray(greenassistant_time_);
+  }
+  /// Vector of spaces for the velocity profile
+  const ::flatbuffers::Array<double, 20> *greenassistant_space() const {
+    return &::flatbuffers::CastToArray(greenassistant_space_);
   }
   /// Vector of velocity profile
-  const ::flatbuffers::Array<double, 20> *velocity_profile_values() const {
-    return &::flatbuffers::CastToArray(velocity_profile_values_);
+  const ::flatbuffers::Array<double, 20> *greenassistant_velocity() const {
+    return &::flatbuffers::CastToArray(greenassistant_velocity_);
   }
   /// Cost of the manoeuvre
   double cost_manoeuvre() const {
     return ::flatbuffers::EndianScalar(cost_manoeuvre_);
   }
 };
-FLATBUFFERS_STRUCT_END(GreenStructOut, 344);
+FLATBUFFERS_STRUCT_END(GreenStructOut, 504);
 
 struct IGreenT : public ::flatbuffers::NativeTable {
   typedef IGreen TableType;

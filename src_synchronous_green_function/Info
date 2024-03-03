@@ -1,0 +1,21 @@
+Situazione deterministica in car maker la green function è chiamata da codriver
+
+Bisogna definire il tempo di esecuzione della green function
+n_cycle = 50
+period_green_function = n_cycle * 50 (ms periodo codriver)
+La green function è chiamata ogni period_green_function
+
+Ciclo Codriver
+1. Codriver riceve lo scenario ed
+2. Se è il primo n_cycle invio i dati alla green fucntion
+3. Se sono passati n_cycle
+4. Ricevo le informazioni dalla green function e invio un nuovo pacchetto alla green function
+5. Se il pacchetto non è arrivato aspetto che il pacchetto arrivi.
+6. Il codice nel pacchetto ricevuto deve essere uguale al codice del pacchetto inviato al ciclo precedente
+6. utilizzo i dati ricevuti per compilare le interfacce pria di chiamare codriver.
+
+Ciclo Green Function
+1. Si mette in attesa per un nuovo pacchetto
+2. Appena lo ricevo faccio il conto e poi invio il pacchetto di risposta.
+3. Torno ad aspettare un pacchetto.
+
