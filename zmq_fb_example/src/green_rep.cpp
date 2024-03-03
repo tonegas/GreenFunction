@@ -82,17 +82,19 @@ int main() {
       auto data = flatbuffers::GetRoot<IGreen>(zmq_msg_data(&received_data));
 
       // Get data
+      auto adasis_curvature_dist_aux = data->in()->adasis_curvature_dist();
+      auto adasis_curvature_values_aux = data->in()->adasis_curvature_values();
+      auto adasis_speed_limit_dist_aux = data->in()->adasis_speed_limit_dist();
+      auto adasis_speed_limit_values_aux = data->in()->adasis_curvature_values();
+
+      // Data
       cycle_number = data->cycle_number();
       ecu_up_time = data->in()->ecu_up_time();
       adasis_curvature_nrs = data->in()->adasis_curvature_nrs();
-      auto adasis_curvature_dist_aux = data->in()->adasis_curvature_dist();
-      auto adasis_curvature_values_aux = data->in()->adasis_curvature_values();
       adasis_curvature_dist = std::vector<double>(adasis_curvature_dist_aux->begin(), adasis_curvature_dist_aux->end());
       adasis_curvature_values = std::vector<double>(adasis_curvature_values_aux->begin(), adasis_curvature_values_aux->end());
       lane_width = data->in()->lane_width();
       adasis_speed_limits_nrs = data->in()->adasis_speed_limits_nrs();
-      auto adasis_speed_limit_dist_aux = data->in()->adasis_speed_limit_dist();
-      auto adasis_speed_limit_values_aux = data->in()->adasis_curvature_values();
       adasis_speed_limit_dist = std::vector<double>(adasis_speed_limit_dist_aux->begin(), adasis_speed_limit_dist_aux->end());
       adasis_speed_limit_values = std::vector<double>(adasis_speed_limit_values_aux->begin(), adasis_speed_limit_values_aux->end());
 
@@ -100,6 +102,10 @@ int main() {
 
       /* WRITE YOUR CODE HERE */
       std::this_thread::sleep_for(std::chrono::seconds(3));
+
+      std::vector<double> velocity_profile_times_data();
+      /* WRITE YOUR CODE HERE */
+
 
       // Initialize a FlatBuffer builder
       flatbuffers::FlatBufferBuilder builder;
