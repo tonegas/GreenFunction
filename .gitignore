@@ -3,6 +3,11 @@
 
 # C/C++
 build/
+*/build/
 
 # Third-party libraries
 third_party/
+*/third_party/
+
+*/cmake-build-debug
+*/cmake-build-release

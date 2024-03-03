@@ -36,16 +36,18 @@ int main()
 
   // Subscribe to the topic
   rc = zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, "CoDriver", 8);
+  const int timeout = 5;
+  rc = zmq_setsockopt(subscriber, ZMQ_RCVTIMEO,&timeout,sizeof(timeout));
   assert(rc == 0);
 
   // Wait for 1 s to avoid the slow joiner problem
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   // Create the queue
-  ZMQRecvQueue subscriber_queue(subscriber, 1);
+  ZMQRecvQueue subscriber_queue( 1);
 
   // Start the queue
-  subscriber_queue.start();
+  subscriber_queue.start(&subscriber);
 
   // Create an empty ZMQMessage
   std::shared_ptr<ZMQMessage> msg;
@@ -106,7 +108,7 @@ int main()
   }
 
   // Stop the queue
-  subscriber_queue.stop();
+  subscriber_queue.stop(&subscriber);
 
   // Close the socket
   zmq_close(subscriber);
