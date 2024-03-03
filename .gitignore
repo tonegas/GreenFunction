@@ -9,5 +9,7 @@ build/
 third_party/
 */third_party/
 
+cmake-build-debug
+cmake-build-release
 */cmake-build-debug
 */cmake-build-release
