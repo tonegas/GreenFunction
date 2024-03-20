@@ -87,7 +87,7 @@ int main() {
       auto adasis_curvature_dist_aux = data->in()->adasis_curvature_dist();
       auto adasis_curvature_values_aux = data->in()->adasis_curvature_values();
       auto adasis_speed_limit_dist_aux = data->in()->adasis_speed_limit_dist();
-      auto adasis_speed_limit_values_aux = data->in()->adasis_curvature_values();
+      auto adasis_speed_limit_values_aux = data->in()->adasis_speed_limit_values();
 
       // Data
       cycle_number = data->cycle_number();
