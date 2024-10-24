@@ -11,7 +11,6 @@ how to solve the slow subscriber problem.
 //#include "MatlabDataArray.hpp"
 
 #include "onnxruntime_cxx_api.h"
-
 #include "green_function_generated.h"
 #include "zmq.h"
 #include "zmq_recv_queue.hpp"
@@ -267,7 +266,47 @@ int main(int argc, const char* argv[]) {
           std::cerr << "Unable to open file '" + output_path + std::to_string(cycle_number) + "_legal_speed_limit.txt'." << std::endl;
       }
 
-      //---------------------------------------------------------------------------------------------
+      // INIZIO CODICE
+//      legal_speed_limit = legal_speed_limit./3.6;
+//
+//      v0 = 14.84;
+//      a0 = 4.2;
+//
+//      speed_limit = zeros(size(curvature_dist));
+//      vmax_turn = zeros(size(curvature_dist));
+//
+//for i = 1 : length(curvature_dist)
+//
+//                 if curvature_values(i) ~= 0
+//           vmax_turn(i) = v0 * ( (a0^2/curvature_values(i)^2/v0^4 + 0.25)^0.5 - 0.5)^0.25;
+//speed_limit(i) = min(legal_speed_limit(i), vmax_turn(i));
+//else
+//      speed_limit(i) = legal_speed_limit(i);
+//end
+//
+//
+//      end
+//
+//            curvature_dist(i+1) = curvature_dist(i);
+//speed_limit(i+1) = speed_limit(i);
+//legal_speed_limit(i+1) = legal_speed_limit(i);
+    // FINE CODICE
+      // Di seguito il codice di sopra che passa da matlab a c++
+//      std::vector<double> legal_speed_limit(adasis_speed_limit_values.size(), 0);
+//      std::vector<double> vmax_turn(adasis_speed_limit_values.size(), 0);
+//      double a0 = 4.2;
+//      for (int i = 0; i < adasis_speed_limit_values.size(); i++) {
+//          if (adasis_curvature_values[i] != 0) {
+//              vmax_turn[i] = v0 * (pow((pow(a0, 2) / pow(adasis_curvature_values[i], 2) / pow(v0, 4) + 0.25), 0.5) - 0.5);
+//              legal_speed_limit[i] = std::min(adasis_speed_limit_values[i], vmax_turn[i]);
+//          }
+//          else {
+//              legal_speed_limit[i] = adasis_speed_limit_values[i];
+//          }
+//      }
+//
+
+//---------------------------------------------------------------------------------------------
       // ONNX
 //      std::cout << "START ONNX" << std::endl;
 //      Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "test");
