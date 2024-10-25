@@ -44,6 +44,7 @@ int main(int argc, const char *argv[]) {
    }else{
       zmq_address_pub = "tcp://localhost:5555";
    }
+   std::cout << "Publisher address: " << zmq_address_pub << "..." << std::endl;
    int rc = zmq_bind(publisher, zmq_address_pub.c_str());
    assert(rc == 0);
 #else
@@ -61,6 +62,7 @@ int main(int argc, const char *argv[]) {
    }else{
       zmq_address_pub = "tcp://localhost:5560";
    }
+   std::cout << "Publisher address: " << zmq_address_pub << "..." << std::endl;
    int rc = zmq_bind(publisher, zmq_address_pub.c_str());
    assert(rc == 0);
    // Create the subscriber socket to recieve from the broker - Green function output
@@ -72,6 +74,7 @@ int main(int argc, const char *argv[]) {
    }else{
       zmq_address_sub = "tcp://localhost:6000";
    }
+   std::cout << "Subscriber address: " << zmq_address_sub << "..." << std::endl;
    rc = zmq_connect(subscriber, zmq_address_sub.c_str());
    assert(rc == 0);
 #endif

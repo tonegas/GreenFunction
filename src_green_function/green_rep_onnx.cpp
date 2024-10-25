@@ -31,6 +31,7 @@ int main(int argc, const char* argv[]) {
    }else{
       zmq_address = "tcp://localhost:5555";
    }
+   std::cout << "Subscriber address: " << zmq_address << std::endl;
    int rc = zmq_connect(subscriber, zmq_address.c_str());
    assert(rc == 0);
    // Wait for 1 s to avoid the slow joiner problem
@@ -47,8 +48,9 @@ int main(int argc, const char* argv[]) {
    if(argc >= 3){
       zmq_address_sub = argv[2];
    }else{
-      zmq_address_sub = "tcp://localhost:5560";
+      zmq_address_sub = "tcp://10.196.37.63:5560";
    }
+   std::cout << "Subscriber address: " << zmq_address_sub << std::endl;
    int rc = zmq_connect(subscriber, zmq_address_sub.c_str()); // add the address to the CO-DRIVER!
    assert(rc == 0);
 
@@ -63,8 +65,9 @@ int main(int argc, const char* argv[]) {
    if(argc >= 4){
       zmq_address_pub = argv[3];
    }else{
-      zmq_address_pub = "tcp://localhost:6000";
+      zmq_address_pub = "tcp://10.196.37.13:6000";
    }
+   std::cout << "Publisher address: " << zmq_address_pub << std::endl;
    //rc = zmq_connect(publisher, zmq_address_pub.c_str()); // add the address OF THE BROKER! "tcp://10.196.16.114:5555" tcp://localhost:6001
    rc = zmq_bind(publisher, zmq_address_pub.c_str());
    std::this_thread::sleep_for(std::chrono::seconds(1));
