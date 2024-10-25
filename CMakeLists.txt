@@ -32,18 +32,15 @@ link_libraries(
 )
 
 add_executable(codriver
-        src_synchronous_green_function/codriver_offline_execute_req.cc
+        src_green_function/codriver_offline_execute_req.cc
 )
 
 add_executable(green
-        onnx/green_rep.cpp
-        onnx/print_output_data.cpp
-        onnx/print_processing_time.cpp
-        onnx/print_speed_limit.cpp
+        src_green_function/green_rep.cpp
 )
 
 add_executable(green_onnx
-        onnx/green_rep_onnx.cpp
+        src_green_function/green_rep_onnx.cpp
 )
 
 set_target_properties(green_onnx

@@ -14,6 +14,8 @@ using namespace GreenFunction;
 
 int running = 1;
 
+#define REQ_REP 0
+
 int main(int argc, const char *argv[]) {
    FILE *fp_scenario;
    if (argc == 2) {
@@ -27,19 +29,52 @@ int main(int argc, const char *argv[]) {
    // Structu of the scenario
    scenario_msg_t scenario_msg;
 
+#if REQ_REP
    // Create ZMQ context
    void *context = zmq_ctx_new();
-
    // Create the publisher socket
    void *publisher = zmq_socket(context, ZMQ_REQ);
-
    // Set LINGER to 0 to avoid blocking when closing the socket
    int linger = 0;
    zmq_setsockopt(publisher, ZMQ_LINGER, &linger, sizeof(linger));
-
    // Bind to port
-   int rc = zmq_bind(publisher, "tcp://127.0.0.1:5555");
+   std::string zmq_address_pub;
+   if(argc >= 3){
+      zmq_address_pub = argv[2];
+   }else{
+      zmq_address_pub = "tcp://localhost:5555";
+   }
+   int rc = zmq_bind(publisher, zmq_address_pub.c_str());
    assert(rc == 0);
+#else
+   // Create ZMQ context
+   void *context = zmq_ctx_new();
+   // Create the publisher socket
+   void *publisher = zmq_socket(context, ZMQ_PUB);
+   // Set LINGER to 0 to avoid blocking when closing the socket
+   int linger = 0;
+   zmq_setsockopt(publisher, ZMQ_LINGER, &linger, sizeof(linger));
+   // Bind to port
+   std::string zmq_address_pub;
+   if(argc >= 3){
+      zmq_address_pub = argv[2];
+   }else{
+      zmq_address_pub = "tcp://localhost:5560";
+   }
+   int rc = zmq_bind(publisher, zmq_address_pub.c_str());
+   assert(rc == 0);
+   // Create the subscriber socket to recieve from the broker - Green function output
+   void *subscriber = zmq_socket(context, ZMQ_SUB);
+   zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, "Output_Green_Function", 0);
+   std::string zmq_address_sub;
+   if(argc >= 4){
+      zmq_address_sub = argv[3];
+   }else{
+      zmq_address_sub = "tcp://localhost:6000";
+   }
+   rc = zmq_connect(subscriber, zmq_address_sub.c_str());
+   assert(rc == 0);
+#endif
 
    // Wait for 1 s to avoid the slow joiner problem
    std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -65,39 +100,62 @@ int main(int argc, const char *argv[]) {
    double cost_manoeuvre;
 
    // parse scenario file
-   const int freq = 50;
    while (running && fread(scenario_msg.data_buffer, sizeof(scenario_msg.data_buffer), 1, fp_scenario) > 0) {
       auto start = std::chrono::high_resolution_clock::now();
       std::cout << "cycle_number:" << scenario_msg.data_struct.CycleNumber << std::endl;
       if (scenario_msg.data_struct.CycleNumber == 1 || scenario_msg.data_struct.CycleNumber % 50 == 0) {
          if (scenario_msg.data_struct.CycleNumber > 1) {
             /* RICEZIONE VIA ZMQ */
-            bool ok = false;
             std::cout << "Receiving data..." << std::endl;
             int received = 0;
+#if REQ_REP == 0
+            int counter_message = 0;
+#endif
             while (received == 0) {
-               // Read message data
-               zmq_msg_t received_data;
-               zmq_msg_init(&received_data);
-               rc = zmq_msg_recv(&received_data, publisher, 0);
-               assert(rc != -1);
+#if REQ_REP == 0
+               if(counter_message == 0) {
+                  char buffer[256];
+                  int size;
+                  size = zmq_recv(subscriber, buffer, 255, 0);
+                  assert(size >= 0);
+                  std::cout << "Data topic " << buffer << std::endl;
+                  counter_message += 1;
+                  // Check if more message parts are to be received
+                  int more;
+                  size_t more_size = sizeof(more);
+                  zmq_getsockopt(subscriber, ZMQ_RCVMORE, &more, &more_size);
+                  counter_message += 1;
+               } else {
+#endif
+                  // Read message data
+                  zmq_msg_t received_data;
+                  zmq_msg_init(&received_data);
+#if REQ_REP
+                  rc = zmq_msg_recv(&received_data, publisher, 0);
+#else
+                  rc = zmq_msg_recv(&received_data, subscriber, 0);
+#endif
+                  assert(rc != -1);
 
-               // Fill in the flatbuffer
-               auto data = flatbuffers::GetRoot<IGreen>(zmq_msg_data(&received_data));
+                  // Fill in the flatbuffer
+                  auto data = flatbuffers::GetRoot<IGreen>(zmq_msg_data(&received_data));
 
-               cycle_number = data->cycle_number();
-               std::cout << "received <- cycle_number: " << cycle_number << std::endl;
-               ecu_up_time = data->out()->ecu_up_time();
-               t0 = data->out()->t0();
-               auto greenassistant_time_aux = data->out()->greenassistant_time();
-               auto greenassistant_velocity_aux = data->out()->greenassistant_velocity();
-               auto greenassistant_space_aux = data->out()->greenassistant_space();
-               greenassistant_time = std::vector<double>(greenassistant_time_aux->begin(), greenassistant_time_aux->end());
-               greenassistant_velocity = std::vector<double>(greenassistant_velocity_aux->begin(), greenassistant_velocity_aux->end());
-               greenassistant_space = std::vector<double>(greenassistant_space_aux->begin(), greenassistant_space_aux->end());
-               cost_manoeuvre = data->out()->cost_manoeuvre();
-               zmq_msg_close(&received_data);
-               received = 1;
+                  cycle_number = data->cycle_number();
+                  std::cout << "received <- cycle_number: " << cycle_number << std::endl;
+                  ecu_up_time = data->out()->ecu_up_time();
+                  t0 = data->out()->t0();
+                  auto greenassistant_time_aux = data->out()->greenassistant_time();
+                  auto greenassistant_velocity_aux = data->out()->greenassistant_velocity();
+                  auto greenassistant_space_aux = data->out()->greenassistant_space();
+                  greenassistant_time = std::vector<double>(greenassistant_time_aux->begin(), greenassistant_time_aux->end());
+                  greenassistant_velocity = std::vector<double>(greenassistant_velocity_aux->begin(), greenassistant_velocity_aux->end());
+                  greenassistant_space = std::vector<double>(greenassistant_space_aux->begin(), greenassistant_space_aux->end());
+                  cost_manoeuvre = data->out()->cost_manoeuvre();
+                  zmq_msg_close(&received_data);
+                  received = 1;
+#if REQ_REP == 0
+               }
+#endif
             }
          }
 
@@ -125,6 +183,11 @@ int main(int argc, const char *argv[]) {
       auto end = std::chrono::high_resolution_clock::now();
       std::cout << "Total time:" << (end - start).count() / 1e9 << std::endl;
    }
+#if REQ_REP == 0
+   zmq_close(subscriber);
+#endif
+   zmq_close(publisher);
+   zmq_ctx_destroy(context);
 
    return 0;
 }

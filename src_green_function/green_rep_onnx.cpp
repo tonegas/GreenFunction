@@ -8,11 +8,15 @@
 #include "green_function_generated.h"
 #include "zmq.h"
 
+#define REQ_REP 0
+
 using namespace GreenFunction;
 int running = 1;
 
 // Main function
 int main(int argc, const char* argv[]) {
+
+#if REQ_REP
    // Create a ZMQ context
    void *context = zmq_ctx_new();
    // Create the subscriber socket
@@ -22,8 +26,8 @@ int main(int argc, const char* argv[]) {
    zmq_setsockopt(subscriber, ZMQ_LINGER, &linger, sizeof(linger));
    // Connect to the endpoint
    std::string zmq_address;
-   if(argc >= 2){
-      zmq_address = argv[1];
+   if(argc >= 3){
+      zmq_address = argv[2];
    }else{
       zmq_address = "tcp://localhost:5555";
    }
@@ -31,6 +35,42 @@ int main(int argc, const char* argv[]) {
    assert(rc == 0);
    // Wait for 1 s to avoid the slow joiner problem
    std::this_thread::sleep_for(std::chrono::seconds(1));
+#else
+   // Create a ZMQ context
+   void *context = zmq_ctx_new();
+   void *subscriber = zmq_socket(context, ZMQ_SUB);
+   zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, "", 0);
+   int trueValue = 1;
+   zmq_setsockopt(subscriber, ZMQ_CONFLATE, &trueValue, sizeof(int));
+   // Create the publisher to send the data to the broker
+   std::string zmq_address_sub;
+   if(argc >= 3){
+      zmq_address_sub = argv[2];
+   }else{
+      zmq_address_sub = "tcp://localhost:5560";
+   }
+   int rc = zmq_connect(subscriber, zmq_address_sub.c_str()); // add the address to the CO-DRIVER!
+   assert(rc == 0);
+
+   // Wait for 1 s to avoid the slow joiner problem
+   std::this_thread::sleep_for(std::chrono::seconds(1));
+
+   void *publisher = zmq_socket(context, ZMQ_PUB);
+   // Set LINGER to 0 to avoid blocking when closing the socket
+   int linger = 0;
+   zmq_setsockopt(publisher, ZMQ_LINGER, &linger, sizeof(linger));
+   std::string zmq_address_pub;
+   if(argc >= 4){
+      zmq_address_pub = argv[3];
+   }else{
+      zmq_address_pub = "tcp://localhost:6000";
+   }
+   //rc = zmq_connect(publisher, zmq_address_pub.c_str()); // add the address OF THE BROKER! "tcp://10.196.16.114:5555" tcp://localhost:6001
+   rc = zmq_bind(publisher, zmq_address_pub.c_str());
+   std::this_thread::sleep_for(std::chrono::seconds(1));
+   assert(rc == 0);
+   std::string Topic = "Output_Green_Function";
+#endif
 
    // Handle SIGINT
    signal(SIGINT, [](int) { running = 0; });
@@ -64,8 +104,8 @@ int main(int argc, const char* argv[]) {
    Ort::SessionOptions session_options;
    //Ort::Session session(env, "../onnx_models/saved_model.onnx", session_options);
    std::string onnx_model;
-   if (argc >= 3) {
-      onnx_model = argv[2];
+   if (argc >= 2) {
+      onnx_model = argv[1];
    } else {
       onnx_model = "../onnx_models/net.onnx";
    }
@@ -85,6 +125,7 @@ int main(int argc, const char* argv[]) {
       zmq_msg_t received_data;
       rc = zmq_msg_init(&received_data);
       assert(rc == 0);
+      //flags = 0 blocking and flags = 1 non-blocking NOT TESTED
       rc = zmq_msg_recv(&received_data, subscriber, 0);
       assert(rc != -1);
 
@@ -108,8 +149,9 @@ int main(int argc, const char* argv[]) {
       adasis_speed_limits_nrs = data->in()->adasis_speed_limits_nrs();
       adasis_speed_limit_dist = std::vector<double>(adasis_speed_limit_dist_aux->begin(), adasis_speed_limit_dist_aux->end());
       adasis_speed_limit_values = std::vector<double>(adasis_speed_limit_values_aux->begin(), adasis_speed_limit_values_aux->end());
-      std::cout << "received <- cycle_number: " << cycle_number << std::endl;
+      zmq_msg_close(&received_data);
 
+      std::cout << "received <- cycle_number: " << cycle_number << std::endl;
       // Fix the vector removing the last elements if it is greater than the number of elements
       if(adasis_curvature_dist.size() > adasis_curvature_nrs) {
          adasis_curvature_dist.erase(adasis_curvature_dist.begin() + adasis_curvature_nrs, adasis_curvature_dist.end());
@@ -280,14 +322,29 @@ int main(int argc, const char* argv[]) {
       auto packet = CreateIGreen(builder, data->cycle_number(), NULL, &green_struct_out);
       builder.Finish(packet);
 
+#if REQ_REP
       // Publish data, first the topic and then the message
       int err2 = zmq_send(subscriber, builder.GetBufferPointer(), builder.GetSize(), 0);
       if (err2 == -1) { std::cout << "Error!!!" << std::strerror(errno) << std::endl; }
       std::cout << "sent -> F:" << data->cycle_number() << std::endl;
-      zmq_msg_close(&received_data);
-
+#else
+      int err2 = zmq_send(publisher, Topic.c_str(), Topic.size(), ZMQ_SNDMORE); // send m
+      if (err2 == -1) { std::cout << "Error!!!" << std::strerror(errno) << std::endl; }
+      err2 = zmq_send(publisher, builder.GetBufferPointer(), builder.GetSize(), 0);
+      if (err2 == -1) { std::cout << "Error!!!" << std::strerror(errno) << std::endl; }
+      std::cout << "sent -> F:" << data->cycle_number() << std::endl;
+#endif
       // End time
       auto end = std::chrono::high_resolution_clock::now();
       std::cout << "Total time:" << (end - start).count() / 1000000000.0 << std::endl;
    }
+#if REQ_REP
+   zmq_close(subscriber);
+   zmq_ctx_destroy(context);
+#else
+   zmq_close(subscriber);
+   zmq_close(publisher);
+   zmq_ctx_destroy(context);
+#endif
+
 }

@@ -1,5 +1,5 @@
 Situazione deterministica in car maker la green function è chiamata da codriver
-
+Si utilizza la define REQ_REP = 1
 Bisogna definire il tempo di esecuzione della green function
 n_cycle = 50
 period_green_function = n_cycle * 50 (ms periodo codriver)
