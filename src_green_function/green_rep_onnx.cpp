@@ -252,13 +252,13 @@ int main(int argc, const char* argv[]) {
          std::cout << legal_speed_limit[i] << " ";
       }
       std::cout<< std::endl;
-      std::cout<<"V0: "<< v0<< std::endl;
+      std::cout<<"V0: "<< ego_velocity<< std::endl;
 
       // ONNX Mauro network
       std::cout << "Start ONNX..." << std::endl;
       std::vector<const char*> input_names = {"Vo","VL"};
       // Get ego velocity
-      std::vector<float> Vo(1, v0);
+      std::vector<float> Vo(1, ego_velocity);
       std::vector<int64_t> Vo_shape = {1, 1};
 
       // Prepare input and output
